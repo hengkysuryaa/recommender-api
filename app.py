@@ -69,7 +69,7 @@ class History(Resource):
                 "id" : i+1,
                 "product_id" : ids[i],
                 "product_url" : urls[i],
-                "predicted_rating" : ratings[i]
+                "user_rating" : ratings[i]
             }
             data.append(item)
 
