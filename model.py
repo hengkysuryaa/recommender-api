@@ -1,6 +1,4 @@
-from sklearn.linear_model import LinearRegression
 from sklearn.preprocessing import OrdinalEncoder
-from sklearn import metrics
 import surprise
 import pickle
 import pandas as pd
@@ -20,8 +18,20 @@ def prepare():
 def recommendation(username: str):
     df, model, ord_enc = prepare()
 
-    products = df['product_id'].unique()
+    bought_products = df[df['reviewed_by'] == username]['product_id'].unique()
+    products = df[(df['reviewed_by'] != username) & (~df['product_id'].isin(bought_products))]['product_id'].unique()
     user_id = int(ord_enc.transform([[username]])[0][0])
+
+    # Get top 10 Recently Bought Product
+    top10_recently = []
+    for product in bought_products:
+        data_input = {}
+        data_input['product_id'] = str(product)
+        data_input['rating'] = list(df[(df['product_id'] == product) & (df['reviewed_by'] == username)]['rating'])[0]
+        data_input['product_urls'] = list(df[df['product_id'] == product]['product_url'])[0]
+        top10_recently.append(data_input)
+    
+    top10_recently = pd.DataFrame(top10_recently).head(10)
 
     predicted_rating = []
     product_urls = []
@@ -37,4 +47,5 @@ def recommendation(username: str):
                                 'product_urls': product_urls})
     top10_df = recommendations.sort_values(by='rating', ascending=False).head(10)
 
-    return list(top10_df['product_id']), list(top10_df['rating']), list(top10_df['product_urls'])
+    return (list(top10_df['product_id']), list(top10_df['rating']), list(top10_df['product_urls']), 
+            list(top10_recently['product_id']), list(top10_recently['rating']), list(top10_recently['product_urls']))
