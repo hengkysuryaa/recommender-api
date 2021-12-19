@@ -33,9 +33,11 @@ class Auth(Resource):
     @cross_origin()
     def post(self):
         data = request.get_json()
-        user = db.session.query(User).filter((User.username == data.get("username")) and (User.password == data.get("password"))).all()
+        user = db.session.query(User).filter(User.username == data.get("username")).all()
+        if (len(user) != 0) and (data.get("password") == user[0].password):
+            return jsonify({'success': True})
         
-        return jsonify({'success': bool(len(user))})
+        return jsonify({'success': False})
 
 class Recommend(Resource):
 
