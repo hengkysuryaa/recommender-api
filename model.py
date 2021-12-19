@@ -15,14 +15,10 @@ def prepare():
 
     return df, model, ord_enc
 
-def recommendation(username: str):
-    df, model, ord_enc = prepare()
-
+def history(username: str):
+    # Get top 10 recently bought product
+    df, _, _ = prepare()
     bought_products = df[df['reviewed_by'] == username]['product_id'].unique()
-    products = df[(df['reviewed_by'] != username) & (~df['product_id'].isin(bought_products))]['product_id'].unique()
-    user_id = int(ord_enc.transform([[username]])[0][0])
-
-    # Get top 10 Recently Bought Product
     top10_recently = []
     for product in bought_products:
         data_input = {}
@@ -32,6 +28,17 @@ def recommendation(username: str):
         top10_recently.append(data_input)
     
     top10_recently = pd.DataFrame(top10_recently).head(10)
+
+    return list(top10_recently['product_id']), list(top10_recently['rating']), list(top10_recently['product_urls'])
+
+
+def recommendation(username: str):
+    # Get top 10 recommended products
+    df, model, ord_enc = prepare()
+
+    bought_products = df[df['reviewed_by'] == username]['product_id'].unique()
+    products = df[(df['reviewed_by'] != username) & (~df['product_id'].isin(bought_products))]['product_id'].unique()
+    user_id = int(ord_enc.transform([[username]])[0][0])
 
     predicted_rating = []
     product_urls = []
@@ -47,5 +54,4 @@ def recommendation(username: str):
                                 'product_urls': product_urls})
     top10_df = recommendations.sort_values(by='rating', ascending=False).head(10)
 
-    return (list(top10_df['product_id']), list(top10_df['rating']), list(top10_df['product_urls']), 
-            list(top10_recently['product_id']), list(top10_recently['rating']), list(top10_recently['product_urls']))
+    return list(top10_df['product_id']), list(top10_df['rating']), list(top10_df['product_urls'])

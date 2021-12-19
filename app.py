@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS, cross_origin
-from model import recommendation
+from model import recommendation, history
 
 app = Flask(__name__)
 CORS(app)
@@ -57,10 +57,29 @@ class Recommend(Resource):
 
         return jsonify({'data': data})
 
+class History(Resource):
+
+    @cross_origin()
+    def post(self):
+        data = request.get_json()
+        ids, ratings, urls = history(data.get("name"))
+        data = []
+        for i in range(len(ids)):
+            item = {
+                "id" : i+1,
+                "product_id" : ids[i],
+                "product_url" : urls[i],
+                "predicted_rating" : ratings[i]
+            }
+            data.append(item)
+
+        return jsonify({'data': data})
+
 # Add new endpoint here
 api.add_resource(Healtz, '/')
 api.add_resource(Auth, '/auth')
 api.add_resource(Recommend, '/recommend')
+api.add_resource(History, '/history')
 
 if __name__ == '__main__':
     app.run(debug = True)
